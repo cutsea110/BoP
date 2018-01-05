@@ -1,20 +1,347 @@
-(* ãƒ¡ãƒˆãƒ­ãƒãƒƒãƒˆãƒ¯ãƒ¼ã‚¯æœ€çŸ­è·¯å•é¡Œ *)
-(* é§…å *)
-type ekimei_t =
-{ kanji  : string;
-  kana   : string;
-  romaji : string;
-  shozoku : string;
-}
-(* é§…åã®è¡¨ç¤º *)
-let hyoji eki = match eki with
-    { kanji = n; kana = k; romaji = e; shozoku = l } -> l ^ " " ^ n ^ " (" ^ k ^ ")"
-
-(* é§…é–“ *)
-type ekikan_t =
-{ kiten : string;    (* èµ·ç‚¹ *)
-  shuten : string;   (* çµ‚ç‚¹ *)
-  keiyu : string;    (* è·¯ç·šå *)
-  kyori : float;     (* è·é›¢(km) *)
-  jikan : int;       (* æ‰€è¦æ™‚é–“(min) *)
-}
+type ekimei_t = { 
+  kanji   : string; (* ±ØÌ¾ *) 
+  kana    : string; (* ÆÉ¤ß *) 
+  romaji  : string; (* ¥í¡¼¥Ş»ú *) 
+  shozoku : string; (* ½êÂ°ÀşÌ¾ *) 
+} 
+ 
+type ekikan_t = { 
+  kiten  : string; (* µ¯ÅÀ *) 
+  shuten : string; (* ½ªÅÀ *) 
+  keiyu  : string; (* ·ĞÍ³ÀşÌ¾ *) 
+  kyori  : float;  (* µ÷Î¥ *) 
+  jikan  : int;    (* »ş´Ö *) 
+} 
+ 
+let global_ekimei_list = [ 
+{kanji="Âå¡¹ÌÚ¾å¸¶"; kana="¤è¤è¤®¤¦¤¨¤Ï¤é"; romaji="yoyogiuehara"; shozoku="ÀéÂåÅÄÀş"}; 
+{kanji="Âå¡¹ÌÚ¸ø±à"; kana="¤è¤è¤®¤³¤¦¤¨¤ó"; romaji="yoyogikouen"; shozoku="ÀéÂåÅÄÀş"}; 
+{kanji="ÌÀ¼£¿ÀµÜÁ°"; kana="¤á¤¤¤¸¤¸¤ó¤°¤¦¤Ş¤¨"; romaji="meijijinguumae"; shozoku="ÀéÂåÅÄÀş"}; 
+{kanji="É½»²Æ»"; kana="¤ª¤â¤Æ¤µ¤ó¤É¤¦"; romaji="omotesandou"; shozoku="ÀéÂåÅÄÀş"}; 
+{kanji="ÇµÌÚºä"; kana="¤Î¤®¤¶¤«"; romaji="nogizaka"; shozoku="ÀéÂåÅÄÀş"}; 
+{kanji="ÀÖºä"; kana="¤¢¤«¤µ¤«"; romaji="akasaka"; shozoku="ÀéÂåÅÄÀş"}; 
+{kanji="¹ñ²ñµÄ»öÆ²Á°"; kana="¤³¤Ã¤«¤¤¤®¤¸¤É¤¦¤Ş¤¨"; romaji="kokkaigijidoumae"; shozoku="ÀéÂåÅÄÀş"}; 
+{kanji="²â¥ö´Ø"; kana="¤«¤¹¤ß¤¬¤»¤­"; romaji="kasumigaseki"; shozoku="ÀéÂåÅÄÀş"}; 
+{kanji="ÆüÈæÃ«"; kana="¤Ò¤Ó¤ä"; romaji="hibiya"; shozoku="ÀéÂåÅÄÀş"}; 
+{kanji="Æó½Å¶¶Á°"; kana="¤Ë¤¸¤å¤¦¤Ğ¤·¤Ş¤¨"; romaji="nijuubasimae"; shozoku="ÀéÂåÅÄÀş"}; 
+{kanji="Âç¼êÄ®"; kana="¤ª¤ª¤Æ¤Ş¤Á"; romaji="otemachi"; shozoku="ÀéÂåÅÄÀş"}; 
+{kanji="¿·¸æÃã¥Î¿å"; kana="¤·¤ó¤ª¤Á¤ã¤Î¤ß¤º"; romaji="shin-ochanomizu"; shozoku="ÀéÂåÅÄÀş"}; 
+{kanji="ÅòÅç"; kana="¤æ¤·¤Ş"; romaji="yushima"; shozoku="ÀéÂåÅÄÀş"}; 
+{kanji="º¬ÄÅ"; kana="¤Í¤Å"; romaji="nedu"; shozoku="ÀéÂåÅÄÀş"}; 
+{kanji="ÀéÂÌÌÚ"; kana="¤»¤ó¤À¤®"; romaji="sendagi"; shozoku="ÀéÂåÅÄÀş"}; 
+{kanji="À¾ÆüÊëÎ¤"; kana="¤Ë¤·¤Ë¤Ã¤İ¤ê"; romaji="nishinippori"; shozoku="ÀéÂåÅÄÀş"}; 
+{kanji="Ä®²°"; kana="¤Ş¤Á¤ä"; romaji="machiya"; shozoku="ÀéÂåÅÄÀş"}; 
+{kanji="ËÌÀé½»"; kana="¤­¤¿¤»¤ó¤¸¤å"; romaji="kitasenjyu"; shozoku="ÀéÂåÅÄÀş"}; 
+{kanji="°½À¥"; kana="¤¢¤ä¤»"; romaji="ayase"; shozoku="ÀéÂåÅÄÀş"}; 
+{kanji="ËÌ°½À¥"; kana="¤­¤¿¤¢¤ä¤»"; romaji="kitaayase"; shozoku="ÀéÂåÅÄÀş"}; 
+{kanji="ÀõÁğ"; kana="¤¢¤µ¤¯¤µ"; romaji="asakusa"; shozoku="¶äºÂÀş"}; 
+{kanji="ÅÄ¸¶Ä®"; kana="¤¿¤ï¤é¤Ş¤Á"; romaji="tawaramachi"; shozoku="¶äºÂÀş"}; 
+{kanji="°ğ²ÙÄ®"; kana="¤¤¤Ê¤ê¤Á¤ç¤¦"; romaji="inaricho"; shozoku="¶äºÂÀş"}; 
+{kanji="¾åÌî"; kana="¤¦¤¨¤Î"; romaji="ueno"; shozoku="¶äºÂÀş"}; 
+{kanji="¾åÌî¹­¾®Ï©"; kana="¤¦¤¨¤Î¤Ò¤í¤³¤¦¤¸"; romaji="uenohirokoji"; shozoku="¶äºÂÀş"}; 
+{kanji="Ëö¹­Ä®"; kana="¤¹¤¨¤Ò¤í¤Á¤ç¤¦"; romaji="suehirocho"; shozoku="¶äºÂÀş"}; 
+{kanji="¿ÀÅÄ"; kana="¤«¤ó¤À"; romaji="kanda"; shozoku="¶äºÂÀş"}; 
+{kanji="»°±ÛÁ°"; kana="¤ß¤Ä¤³¤·¤Ş¤¨"; romaji="mitsukoshimae"; shozoku="¶äºÂÀş"}; 
+{kanji="ÆüËÜ¶¶"; kana="¤Ë¤Û¤ó¤Ğ¤·"; romaji="nihonbashi"; shozoku="¶äºÂÀş"}; 
+{kanji="µş¶¶"; kana="¤­¤ç¤¦¤Ğ¤·"; romaji="kyobashi"; shozoku="¶äºÂÀş"}; 
+{kanji="¶äºÂ"; kana="¤®¤ó¤¶"; romaji="ginza"; shozoku="¶äºÂÀş"}; 
+{kanji="¿·¶¶"; kana="¤·¤ó¤Ğ¤·"; romaji="shinbashi"; shozoku="¶äºÂÀş"}; 
+{kanji="¸×¥ÎÌç"; kana="¤È¤é¤Î¤â¤ó"; romaji="toranomon"; shozoku="¶äºÂÀş"}; 
+{kanji="Î¯ÃÓ»³²¦"; kana="¤¿¤á¤¤¤±¤µ¤ó¤Î¤¦"; romaji="tameikesannou"; shozoku="¶äºÂÀş"}; 
+{kanji="ÀÖºä¸«Éí"; kana="¤¢¤«¤µ¤«¤ß¤Ä¤±"; romaji="akasakamitsuke"; shozoku="¶äºÂÀş"}; 
+{kanji="ÀÄ»³°ìÃúÌÜ"; kana="¤¢¤ª¤ä¤Ş¤¤¤Ã¤Á¤ç¤¦¤á"; romaji="aoyamaicchome"; shozoku="¶äºÂÀş"}; 
+{kanji="³°±ñÁ°"; kana="¤¬¤¤¤¨¤ó¤Ş¤¨"; romaji="gaienmae"; shozoku="¶äºÂÀş"}; 
+{kanji="É½»²Æ»"; kana="¤ª¤â¤Æ¤µ¤ó¤É¤¦"; romaji="omotesando"; shozoku="¶äºÂÀş"}; 
+{kanji="½ÂÃ«"; kana="¤·¤Ö¤ä"; romaji="shibuya"; shozoku="¶äºÂÀş"}; 
+{kanji="½ÂÃ«"; kana="¤·¤Ö¤ä"; romaji="shibuya"; shozoku="È¾Â¢ÌçÀş"}; 
+{kanji="É½»²Æ»"; kana="¤ª¤â¤Æ¤µ¤ó¤É¤¦"; romaji="omotesandou"; shozoku="È¾Â¢ÌçÀş"}; 
+{kanji="ÀÄ»³°ìÃúÌÜ"; kana="¤¢¤ª¤ä¤Ş¤¤¤Ã¤Á¤ç¤¦¤á"; romaji="aoyama-itchome"; shozoku="È¾Â¢ÌçÀş"}; 
+{kanji="±ÊÅÄÄ®"; kana="¤Ê¤¬¤¿¤Á¤ç¤¦"; romaji="nagatacho"; shozoku="È¾Â¢ÌçÀş"}; 
+{kanji="È¾Â¢Ìç"; kana="¤Ï¤ó¤¾¤¦¤â¤ó"; romaji="hanzomon"; shozoku="È¾Â¢ÌçÀş"}; 
+{kanji="¶åÃÊ²¼"; kana="¤¯¤À¤ó¤·¤¿"; romaji="kudanshita"; shozoku="È¾Â¢ÌçÀş"}; 
+{kanji="¿ÀÊİÄ®"; kana="¤¸¤ó¤Ü¤¦¤Á¤ç¤¦"; romaji="jinbocho"; shozoku="È¾Â¢ÌçÀş"}; 
+{kanji="Âç¼êÄ®"; kana="¤ª¤ª¤Æ¤Ş¤Á"; romaji="otemachi"; shozoku="È¾Â¢ÌçÀş"}; 
+{kanji="»°±ÛÁ°"; kana="¤ß¤Ä¤³¤·¤Ş¤¨"; romaji="mitsukoshimae"; shozoku="È¾Â¢ÌçÀş"}; 
+{kanji="¿åÅ·µÜÁ°"; kana="¤¹¤¤¤Æ¤ó¤°¤¦¤Ş¤¨"; romaji="suitengumae"; shozoku="È¾Â¢ÌçÀş"}; 
+{kanji="À¶À¡Çò²Ï"; kana="¤­¤è¤¹¤ß¤·¤é¤«¤ï"; romaji="kiyosumi-shirakawa"; shozoku="È¾Â¢ÌçÀş"}; 
+{kanji="½»µÈ"; kana="¤¹¤ß¤è¤·"; romaji="sumiyoshi"; shozoku="È¾Â¢ÌçÀş"}; 
+{kanji="¶Ó»åÄ®"; kana="¤­¤ó¤·¤Á¤ç¤¦"; romaji="kinshicho"; shozoku="È¾Â¢ÌçÀş"}; 
+{kanji="²¡¾å"; kana="¤ª¤·¤¢¤²"; romaji="oshiage"; shozoku="È¾Â¢ÌçÀş"}; 
+{kanji="ÃæÌÜ¹õ"; kana="¤Ê¤«¤á¤°¤í"; romaji="nakameguro"; shozoku="ÆüÈæÃ«Àş"}; 
+{kanji="·ÃÈæ¼÷"; kana="¤¨¤Ó¤¹"; romaji="ebisu"; shozoku="ÆüÈæÃ«Àş"}; 
+{kanji="¹­Èø"; kana="¤Ò¤í¤ª"; romaji="hiro"; shozoku="ÆüÈæÃ«Àş"}; 
+{kanji="Ï»ËÜÌÚ"; kana="¤í¤Ã¤İ¤ó¤®"; romaji="roppongi"; shozoku="ÆüÈæÃ«Àş"}; 
+{kanji="¿ÀÃ«Ä®"; kana="¤«¤ß¤ä¤Á¤ç¤¦"; romaji="kamiyacho"; shozoku="ÆüÈæÃ«Àş"}; 
+{kanji="²â¥ö´Ø"; kana="¤«¤¹¤ß¤¬¤»¤­"; romaji="kasumigaseki"; shozoku="ÆüÈæÃ«Àş"}; 
+{kanji="ÆüÈæÃ«"; kana="¤Ò¤Ó¤ä"; romaji="hibiya"; shozoku="ÆüÈæÃ«Àş"}; 
+{kanji="¶äºÂ"; kana="¤®¤ó¤¶"; romaji="ginza"; shozoku="ÆüÈæÃ«Àş"}; 
+{kanji="Åì¶äºÂ"; kana="¤Ò¤¬¤·¤®¤ó¤¶"; romaji="higashiginza"; shozoku="ÆüÈæÃ«Àş"}; 
+{kanji="ÃÛÃÏ"; kana="¤Ä¤­¤¸"; romaji="tsukiji"; shozoku="ÆüÈæÃ«Àş"}; 
+{kanji="È¬ÃúËÙ"; kana="¤Ï¤Ã¤Á¤ç¤¦¤Ü¤ê"; romaji="hacchobori"; shozoku="ÆüÈæÃ«Àş"}; 
+{kanji="³ı¾ìÄ®"; kana="¤«¤ä¤Ğ¤Á¤ç¤¦"; romaji="kayabacho"; shozoku="ÆüÈæÃ«Àş"}; 
+{kanji="¿Í·ÁÄ®"; kana="¤Ë¤ó¤®¤ç¤¦¤Á¤ç¤¦"; romaji="ningyomachi"; shozoku="ÆüÈæÃ«Àş"}; 
+{kanji="¾®ÅÁÇÏÄ®"; kana="¤³¤Ç¤ó¤Ş¤Á¤ç¤¦"; romaji="kodemmacho"; shozoku="ÆüÈæÃ«Àş"}; 
+{kanji="½©ÍÕ¸¶"; kana="¤¢¤­¤Ï¤Ğ¤é"; romaji="akihabara"; shozoku="ÆüÈæÃ«Àş"}; 
+{kanji="Ãç¸æÅÌÄ®"; kana="¤Ê¤«¤ª¤«¤Á¤Ş¤Á"; romaji="nakaokachimachi"; shozoku="ÆüÈæÃ«Àş"}; 
+{kanji="¾åÌî"; kana="¤¦¤¨¤Î"; romaji="ueno"; shozoku="ÆüÈæÃ«Àş"}; 
+{kanji="ÆşÃ«"; kana="¤¤¤ê¤ä"; romaji="iriya"; shozoku="ÆüÈæÃ«Àş"}; 
+{kanji="»°¥ÎÎØ"; kana="¤ß¤Î¤ï"; romaji="minowa"; shozoku="ÆüÈæÃ«Àş"}; 
+{kanji="ÆîÀé½»"; kana="¤ß¤Ê¤ß¤»¤ó¤¸¤å"; romaji="minamisenju"; shozoku="ÆüÈæÃ«Àş"}; 
+{kanji="ËÌÀé½»"; kana="¤­¤¿¤»¤ó¤¸¤å"; romaji="kitasenju"; shozoku="ÆüÈæÃ«Àş"}; 
+{kanji="ÃÓÂŞ"; kana="¤¤¤±¤Ö¤¯¤í"; romaji="ikebukuro"; shozoku="´İ¥ÎÆâÀş"}; 
+{kanji="¿·ÂçÄÍ"; kana="¤·¤ó¤ª¤ª¤Ä¤«"; romaji="shinotsuka"; shozoku="´İ¥ÎÆâÀş"}; 
+{kanji="è¬²ÙÃ«"; kana="¤ß¤ç¤¦¤¬¤À¤Ë"; romaji="myogadani"; shozoku="´İ¥ÎÆâÀş"}; 
+{kanji="¸å³Ú±à"; kana="¤³¤¦¤é¤¯¤¨¤ó"; romaji="korakuen"; shozoku="´İ¥ÎÆâÀş"}; 
+{kanji="ËÜ¶¿»°ÃúÌÜ"; kana="¤Û¤ó¤´¤¦¤µ¤ó¤Á¤ç¤¦¤á"; romaji="hongosanchome"; shozoku="´İ¥ÎÆâÀş"}; 
+{kanji="¸æÃã¥Î¿å"; kana="¤ª¤Á¤ã¤Î¤ß¤º"; romaji="ochanomizu"; shozoku="´İ¥ÎÆâÀş"}; 
+{kanji="Ã¸Ï©Ä®"; kana="¤¢¤ï¤¸¤Á¤ç¤¦"; romaji="awajicho"; shozoku="´İ¥ÎÆâÀş"}; 
+{kanji="Âç¼êÄ®"; kana="¤ª¤ª¤Æ¤Ş¤Á"; romaji="otemachi"; shozoku="´İ¥ÎÆâÀş"}; 
+{kanji="Åìµş"; kana="¤È¤¦¤­¤ç¤¦"; romaji="tokyo"; shozoku="´İ¥ÎÆâÀş"}; 
+{kanji="¶äºÂ"; kana="¤®¤ó¤¶"; romaji="ginza"; shozoku="´İ¥ÎÆâÀş"}; 
+{kanji="²â¥ö´Ø"; kana="¤«¤¹¤ß¤¬¤»¤­"; romaji="kasumigaseki"; shozoku="´İ¥ÎÆâÀş"}; 
+{kanji="¹ñ²ñµÄ»öÆ²Á°"; kana="¤³¤Ã¤«¤¤¤®¤¸¤É¤¦¤Ş¤¨"; romaji="kokkaigijidomae"; shozoku="´İ¥ÎÆâÀş"}; 
+{kanji="ÀÖºä¸«Éí"; kana="¤¢¤«¤µ¤«¤ß¤Ä¤±"; romaji="akasakamitsuke"; shozoku="´İ¥ÎÆâÀş"}; 
+{kanji="»Í¥ÄÃ«"; kana="¤è¤Ä¤ä"; romaji="yotsuya"; shozoku="´İ¥ÎÆâÀş"}; 
+{kanji="»ÍÃ«»°ÃúÌÜ"; kana="¤è¤Ä¤ä¤µ¤ó¤Á¤ç¤¦¤á"; romaji="yotsuyasanchome"; shozoku="´İ¥ÎÆâÀş"}; 
+{kanji="¿·½É¸æ±ñÁ°"; kana="¤·¤ó¤¸¤å¤¯¤®¤ç¤¨¤ó¤Ş¤¨"; romaji="shinjuku-gyoemmae"; shozoku="´İ¥ÎÆâÀş"}; 
+{kanji="¿·½É»°ÃúÌÜ"; kana="¤·¤ó¤¸¤å¤¯¤µ¤ó¤Á¤ç¤¦¤á"; romaji="shinjuku-sanchome"; shozoku="´İ¥ÎÆâÀş"}; 
+{kanji="¿·½É"; kana="¤·¤ó¤¸¤å¤¯"; romaji="shinjuku"; shozoku="´İ¥ÎÆâÀş"}; 
+{kanji="À¾¿·½É"; kana="¤Ë¤·¤·¤ó¤¸¤å¤¯"; romaji="nishi-shinjuku"; shozoku="´İ¥ÎÆâÀş"}; 
+{kanji="ÃæÌîºä¾å"; kana="¤Ê¤«¤Î¤µ¤«¤¦¤¨"; romaji="nakano-sakaue"; shozoku="´İ¥ÎÆâÀş"}; 
+{kanji="¿·ÃæÌî"; kana="¤·¤ó¤Ê¤«¤Î"; romaji="shin-nakano"; shozoku="´İ¥ÎÆâÀş"}; 
+{kanji="Åì¹â±ß»û"; kana="¤Ò¤¬¤·¤³¤¦¤¨¤ó¤¸"; romaji="higashi-koenji"; shozoku="´İ¥ÎÆâÀş"}; 
+{kanji="¿·¹â±ß»û"; kana="¤·¤ó¤³¤¦¤¨¤ó¤¸"; romaji="shin-koenji"; shozoku="´İ¥ÎÆâÀş"}; 
+{kanji="Æî°¤º´¥öÃ«"; kana="¤ß¤Ê¤ß¤¢¤µ¤¬¤ä"; romaji="minami-asagaya"; shozoku="´İ¥ÎÆâÀş"}; 
+{kanji="²®·¦"; kana="¤ª¤®¤¯¤Ü"; romaji="ogikubo"; shozoku="´İ¥ÎÆâÀş"}; 
+{kanji="ÃæÌî¿·¶¶"; kana="¤Ê¤«¤Î¤·¤ó¤Ğ¤·"; romaji="nakano-shimbashi"; shozoku="´İ¥ÎÆâÀş"}; 
+{kanji="ÃæÌîÉÙ»Î¸«Ä®"; kana="¤Ê¤«¤Î¤Õ¤¸¤ß¤Á¤ç¤¦"; romaji="nakano-fujimicho"; shozoku="´İ¥ÎÆâÀş"}; 
+{kanji="ÊıÆîÄ®"; kana="¤Û¤¦¤Ê¤ó¤Á¤ç¤¦"; romaji="honancho"; shozoku="´İ¥ÎÆâÀş"}; 
+{kanji="»Í¥ÄÃ«"; kana="¤è¤Ä¤ä"; romaji="yotsuya"; shozoku="ÆîËÌÀş"}; 
+{kanji="±ÊÅÄÄ®"; kana="¤Ê¤¬¤¿¤Á¤ç¤¦"; romaji="nagatacho"; shozoku="ÆîËÌÀş"}; 
+{kanji="Î¯ÃÓ»³²¦"; kana="¤¿¤á¤¤¤±¤µ¤ó¤Î¤¦"; romaji="tameikesanno"; shozoku="ÆîËÌÀş"}; 
+{kanji="Ï»ËÜÌÚ°ìÃúÌÜ"; kana="¤í¤Ã¤İ¤ó¤®¤¤¤Ã¤Á¤ç¤¦¤á"; romaji="roppongiitchome"; shozoku="ÆîËÌÀş"}; 
+{kanji="ËãÉÛ½½ÈÖ"; kana="¤¢¤¶¤Ö¤¸¤å¤¦¤Ğ¤ó"; romaji="azabujuban"; shozoku="ÆîËÌÀş"}; 
+{kanji="Çò¶â¹âÎØ"; kana="¤·¤í¤«¤Í¤¿¤«¤Ê¤ï"; romaji="shirokanetakanawa"; shozoku="ÆîËÌÀş"}; 
+{kanji="Çò¶âÂæ"; kana="¤·¤í¤«¤Í¤À¤¤"; romaji="shirokanedai"; shozoku="ÆîËÌÀş"}; 
+{kanji="ÌÜ¹õ"; kana="¤á¤°¤í"; romaji="meguro"; shozoku="ÆîËÌÀş"}; 
+{kanji="»Ô¥öÃ«"; kana="¤¤¤Á¤¬¤ä"; romaji="ichigaya"; shozoku="ÆîËÌÀş"}; 
+{kanji="ÈÓÅÄ¶¶"; kana="¤¤¤¤¤À¤Ğ¤·"; romaji="idabashi"; shozoku="ÆîËÌÀş"}; 
+{kanji="¸å³Ú±à"; kana="¤³¤¦¤é¤¯¤¨¤ó"; romaji="korakuen"; shozoku="ÆîËÌÀş"}; 
+{kanji="ÅìÂçÁ°"; kana="¤È¤¦¤À¤¤¤Ş¤¨"; romaji="todaimae"; shozoku="ÆîËÌÀş"}; 
+{kanji="ËÜ¶ğ¹ş"; kana="¤Û¤ó¤³¤Ş¤´¤á"; romaji="honkomagome"; shozoku="ÆîËÌÀş"}; 
+{kanji="¶ğ¹ş"; kana="¤³¤Ş¤´¤á"; romaji="komagome"; shozoku="ÆîËÌÀş"}; 
+{kanji="À¾¥ö¸¶"; kana="¤Ë¤·¤¬¤Ï¤é"; romaji="nishigahara"; shozoku="ÆîËÌÀş"}; 
+{kanji="²¦»Ò"; kana="¤ª¤¦¤¸"; romaji="oji"; shozoku="ÆîËÌÀş"}; 
+{kanji="²¦»Ò¿ÀÃ«"; kana="¤ª¤¦¤¸¤«¤ß¤ä"; romaji="ojikamiya"; shozoku="ÆîËÌÀş"}; 
+{kanji="»ÖÌĞ"; kana="¤·¤â"; romaji="shimo"; shozoku="ÆîËÌÀş"}; 
+{kanji="ÀÖ±©´äÊ¥"; kana="¤¢¤«¤Ğ¤Í¤¤¤ï¤Ö¤Á"; romaji="akabaneiwabuchi"; shozoku="ÆîËÌÀş"}; 
+{kanji="À¾Á¥¶¶"; kana="¤Ë¤·¤Õ¤Ê¤Ğ¤·"; romaji="nishi-funabashi"; shozoku="ÅìÀ¾Àş"}; 
+{kanji="¸¶ÌÚÃæ»³"; kana="¤Ğ¤é¤­¤Ê¤«¤ä¤Ş"; romaji="baraki-nakayama"; shozoku="ÅìÀ¾Àş"}; 
+{kanji="Ì¯Åµ"; kana="¤ß¤ç¤¦¤Ç¤ó"; romaji="myoden"; shozoku="ÅìÀ¾Àş"}; 
+{kanji="¹ÔÆÁ"; kana="¤®¤ç¤¦¤È¤¯"; romaji="gyotoku"; shozoku="ÅìÀ¾Àş"}; 
+{kanji="Æî¹ÔÆÁ"; kana="¤ß¤Ê¤ß¤®¤ç¤¦¤È¤¯"; romaji="minami-gyotoku"; shozoku="ÅìÀ¾Àş"}; 
+{kanji="±º°Â"; kana="¤¦¤é¤ä¤¹"; romaji="urayasu"; shozoku="ÅìÀ¾Àş"}; 
+{kanji="³ëÀ¾"; kana="¤«¤µ¤¤"; romaji="kasai"; shozoku="ÅìÀ¾Àş"}; 
+{kanji="À¾³ëÀ¾"; kana="¤Ë¤·¤«¤µ¤¤"; romaji="nishi-kasai"; shozoku="ÅìÀ¾Àş"}; 
+{kanji="Æîº½Ä®"; kana="¤ß¤Ê¤ß¤¹¤Ê¤Ş¤Á"; romaji="minami-sunamachi"; shozoku="ÅìÀ¾Àş"}; 
+{kanji="ÅìÍÛÄ®"; kana="¤È¤¦¤è¤¦¤Á¤ç¤¦"; romaji="touyoucho"; shozoku="ÅìÀ¾Àş"}; 
+{kanji="ÌÚ¾ì"; kana="¤­¤Ğ"; romaji="kiba"; shozoku="ÅìÀ¾Àş"}; 
+{kanji="ÌçÁ°ÃçÄ®"; kana="¤â¤ó¤¼¤ó¤Ê¤«¤Á¤ç¤¦"; romaji="monzen-nakacho"; shozoku="ÅìÀ¾Àş"}; 
+{kanji="³ı¾ìÄ®"; kana="¤«¤ä¤Ğ¤Á¤ç¤¦"; romaji="kayabacho"; shozoku="ÅìÀ¾Àş"}; 
+{kanji="ÆüËÜ¶¶"; kana="¤Ë¤Û¤ó¤Ğ¤·"; romaji="nihonbashi"; shozoku="ÅìÀ¾Àş"}; 
+{kanji="Âç¼êÄ®"; kana="¤ª¤ª¤Æ¤Ş¤Á"; romaji="otemachi"; shozoku="ÅìÀ¾Àş"}; 
+{kanji="Ãİ¶¶"; kana="¤¿¤±¤Ğ¤·"; romaji="takebashi"; shozoku="ÅìÀ¾Àş"}; 
+{kanji="¶åÃÊ²¼"; kana="¤¯¤À¤ó¤·¤¿"; romaji="kudanshita"; shozoku="ÅìÀ¾Àş"}; 
+{kanji="ÈÓÅÄ¶¶"; kana="¤¤¤¤¤À¤Ğ¤·"; romaji="iidabashi"; shozoku="ÅìÀ¾Àş"}; 
+{kanji="¿À³Úºä"; kana="¤«¤°¤é¤¶¤«"; romaji="kagurazaka"; shozoku="ÅìÀ¾Àş"}; 
+{kanji="Áá°ğÅÄ"; kana="¤ï¤»¤À"; romaji="waseda"; shozoku="ÅìÀ¾Àş"}; 
+{kanji="¹âÅÄÇÏ¾ì"; kana="¤¿¤«¤À¤Î¤Ğ¤Ğ"; romaji="takadanobaba"; shozoku="ÅìÀ¾Àş"}; 
+{kanji="Íî¹ç"; kana="¤ª¤Á¤¢¤¤"; romaji="ochiai"; shozoku="ÅìÀ¾Àş"}; 
+{kanji="ÃæÌî"; kana="¤Ê¤«¤Î"; romaji="nakano"; shozoku="ÅìÀ¾Àş"}; 
+{romaji="shinkiba"; kana="¤·¤ó¤­¤Ğ"; kanji="¿·ÌÚ¾ì"; shozoku="Í­³ÚÄ®Àş"}; 
+{romaji="tatsumi"; kana="¤¿¤Ä¤ß"; kanji="Ã¤Ì¦"; shozoku="Í­³ÚÄ®Àş"}; 
+{romaji="toyosu"; kana="¤È¤è¤¹"; kanji="Ë­½§"; shozoku="Í­³ÚÄ®Àş"}; 
+{romaji="tsukishima"; kana="¤Ä¤­¤·¤Ş"; kanji="·îÅç"; shozoku="Í­³ÚÄ®Àş"}; 
+{romaji="shintomityou"; kana="¤·¤ó¤È¤ß¤Á¤ç¤¦"; kanji="¿·ÉÙÄ®"; shozoku="Í­³ÚÄ®Àş"}; 
+{romaji="ginzaittyoume"; kana="¤®¤ó¤¶¤¤¤Ã¤Á¤ç¤¦¤á"; kanji="¶äºÂ°ìÃúÌÜ"; shozoku="Í­³ÚÄ®Àş"}; 
+{romaji="yuurakutyou"; kana="¤æ¤¦¤é¤¯¤Á¤ç¤¦"; kanji="Í­³ÚÄ®"; shozoku="Í­³ÚÄ®Àş"}; 
+{romaji="sakuradamon"; kana="¤µ¤¯¤é¤À¤â¤ó"; kanji="ºùÅÄÌç"; shozoku="Í­³ÚÄ®Àş"}; 
+{romaji="nagatacho"; kana="¤Ê¤¬¤¿¤Á¤ç¤¦"; kanji="±ÊÅÄÄ®"; shozoku="Í­³ÚÄ®Àş"}; 
+{romaji="koujimachi"; kana="¤³¤¦¤¸¤Ş¤Á"; kanji="¹íÄ®"; shozoku="Í­³ÚÄ®Àş"}; 
+{romaji="ichigaya"; kana="¤¤¤Á¤¬¤ä"; kanji="»Ô¥öÃ«"; shozoku="Í­³ÚÄ®Àş"}; 
+{romaji="iidabashi"; kana="¤¤¤¤¤À¤Ğ¤·"; kanji="ÈÓÅÄ¶¶"; shozoku="Í­³ÚÄ®Àş"}; 
+{kanji="¹¾¸ÍÀî¶¶"; kana="¤¨¤É¤¬¤ï¤Ğ¤·"; romaji="edogawabasi"; shozoku="Í­³ÚÄ®Àş"}; 
+{kanji="¸î¹ñ»û"; kana="¤´¤³¤¯¤¸"; romaji="gokokuji"; shozoku="Í­³ÚÄ®Àş"}; 
+{kanji="ÅìÃÓÂŞ"; kana="¤Ò¤¬¤·¤¤¤±¤Ö¤¯¤í"; romaji="higasiikebukuro"; shozoku="Í­³ÚÄ®Àş"}; 
+{kanji="ÃÓÂŞ"; kana="¤¤¤±¤Ö¤¯¤í"; romaji="ikebukuro"; shozoku="Í­³ÚÄ®Àş"}; 
+{kanji="Í×Ä®"; kana="¤«¤Ê¤á¤Á¤ç¤¦"; romaji="kanametyou"; shozoku="Í­³ÚÄ®Àş"}; 
+{kanji="ÀéÀî"; kana="¤»¤ó¤«¤ï"; romaji="senkawa"; shozoku="Í­³ÚÄ®Àş"}; 
+{kanji="¾®Ãİ¸ş¸¶"; kana="¤³¤¿¤±¤à¤«¤¤¤Ï¤é"; romaji="kotakemukaihara"; shozoku="Í­³ÚÄ®Àş"}; 
+{kanji="É¹ÀîÂæ"; kana="¤Ò¤«¤ï¤À¤¤"; romaji="hikawadai"; shozoku="Í­³ÚÄ®Àş"}; 
+{kanji="Ê¿ÏÂÂæ"; kana="¤Ø¤¤¤ï¤À¤¤"; romaji="heiwadai"; shozoku="Í­³ÚÄ®Àş"}; 
+{kanji="±ÄÃÄÀÖÄÍ"; kana="¤¨¤¤¤À¤ó¤¢¤«¤Ä¤«"; romaji="eidanakakuka"; shozoku="Í­³ÚÄ®Àş"}; 
+{kanji="±ÄÃÄÀ®Áı"; kana="¤¨¤¤¤À¤ó¤Ê¤ê¤Ş¤¹"; romaji="eidannarimasu"; shozoku="Í­³ÚÄ®Àş"}; 
+{kanji="ÏÂ¸÷»Ô"; kana="¤ï¤³¤¦¤·"; romaji="wakousi"; shozoku="Í­³ÚÄ®Àş"}; 
+] 
+let global_ekikan_list = [ 
+{kiten="Âå¡¹ÌÚ¾å¸¶"; shuten="Âå¡¹ÌÚ¸ø±à"; keiyu="ÀéÂåÅÄÀş"; kyori=1.0; jikan=2}; 
+{kiten="Âå¡¹ÌÚ¸ø±à"; shuten="ÌÀ¼£¿ÀµÜÁ°"; keiyu="ÀéÂåÅÄÀş"; kyori=1.2; jikan=2}; 
+{kiten="ÌÀ¼£¿ÀµÜÁ°"; shuten="É½»²Æ»"; keiyu="ÀéÂåÅÄÀş"; kyori=0.9; jikan=2}; 
+{kiten="É½»²Æ»"; shuten="ÇµÌÚºä"; keiyu="ÀéÂåÅÄÀş"; kyori=1.4; jikan=3}; 
+{kiten="ÇµÌÚºä"; shuten="ÀÖºä"; keiyu="ÀéÂåÅÄÀş"; kyori=1.1; jikan=2}; 
+{kiten="ÀÖºä"; shuten="¹ñ²ñµÄ»öÆ²Á°"; keiyu="ÀéÂåÅÄÀş"; kyori=0.8; jikan=1}; 
+{kiten="¹ñ²ñµÄ»öÆ²Á°"; shuten="²â¥ö´Ø"; keiyu="ÀéÂåÅÄÀş"; kyori=0.7; jikan=1}; 
+{kiten="²â¥ö´Ø"; shuten="ÆüÈæÃ«"; keiyu="ÀéÂåÅÄÀş"; kyori=1.2; jikan=2}; 
+{kiten="ÆüÈæÃ«"; shuten="Æó½Å¶¶Á°"; keiyu="ÀéÂåÅÄÀş"; kyori=0.7; jikan=1}; 
+{kiten="Æó½Å¶¶Á°"; shuten="Âç¼êÄ®"; keiyu="ÀéÂåÅÄÀş"; kyori=0.7; jikan=1}; 
+{kiten="Âç¼êÄ®"; shuten="¿·¸æÃã¥Î¿å"; keiyu="ÀéÂåÅÄÀş"; kyori=1.3; jikan=2}; 
+{kiten="¿·¸æÃã¥Î¿å"; shuten="ÅòÅç"; keiyu="ÀéÂåÅÄÀş"; kyori=1.2; jikan=2}; 
+{kiten="ÅòÅç"; shuten="º¬ÄÅ"; keiyu="ÀéÂåÅÄÀş"; kyori=1.2; jikan=2}; 
+{kiten="º¬ÄÅ"; shuten="ÀéÂÌÌÚ"; keiyu="ÀéÂåÅÄÀş"; kyori=1.0; jikan=2}; 
+{kiten="ÀéÂÌÌÚ"; shuten="À¾ÆüÊëÎ¤"; keiyu="ÀéÂåÅÄÀş"; kyori=0.9; jikan=1}; 
+{kiten="À¾ÆüÊëÎ¤"; shuten="Ä®²°"; keiyu="ÀéÂåÅÄÀş"; kyori=1.7; jikan=2}; 
+{kiten="Ä®²°"; shuten="ËÌÀé½»"; keiyu="ÀéÂåÅÄÀş"; kyori=2.6; jikan=3}; 
+{kiten="ËÌÀé½»"; shuten="°½À¥"; keiyu="ÀéÂåÅÄÀş"; kyori=2.5; jikan=3}; 
+{kiten="°½À¥"; shuten="ËÌ°½À¥"; keiyu="ÀéÂåÅÄÀş"; kyori=2.1; jikan=4}; 
+{kiten="ÀõÁğ"; shuten="ÅÄ¸¶Ä®"; keiyu="¶äºÂÀş"; kyori=0.8; jikan=2}; 
+{kiten="ÅÄ¸¶Ä®"; shuten="°ğ²ÙÄ®"; keiyu="¶äºÂÀş"; kyori=0.7; jikan=1}; 
+{kiten="°ğ²ÙÄ®"; shuten="¾åÌî"; keiyu="¶äºÂÀş"; kyori=0.7; jikan=2}; 
+{kiten="¾åÌî"; shuten="¾åÌî¹­¾®Ï©"; keiyu="¶äºÂÀş"; kyori=0.5; jikan=2}; 
+{kiten="¾åÌî¹­¾®Ï©"; shuten="Ëö¹­Ä®"; keiyu="¶äºÂÀş"; kyori=0.6; jikan=1}; 
+{kiten="Ëö¹­Ä®"; shuten="¿ÀÅÄ"; keiyu="¶äºÂÀş"; kyori=1.1; jikan=2}; 
+{kiten="¿ÀÅÄ"; shuten="»°±ÛÁ°"; keiyu="¶äºÂÀş"; kyori=0.7; jikan=1}; 
+{kiten="»°±ÛÁ°"; shuten="ÆüËÜ¶¶"; keiyu="¶äºÂÀş"; kyori=0.6; jikan=2}; 
+{kiten="ÆüËÜ¶¶"; shuten="µş¶¶"; keiyu="¶äºÂÀş"; kyori=0.7; jikan=2}; 
+{kiten="µş¶¶"; shuten="¶äºÂ"; keiyu="¶äºÂÀş"; kyori=0.7; jikan=1}; 
+{kiten="¶äºÂ"; shuten="¿·¶¶"; keiyu="¶äºÂÀş"; kyori=0.9; jikan=2}; 
+{kiten="¿·¶¶"; shuten="¸×¥ÎÌç"; keiyu="¶äºÂÀş"; kyori=0.8; jikan=2}; 
+{kiten="¸×¥ÎÌç"; shuten="Î¯ÃÓ»³²¦"; keiyu="¶äºÂÀş"; kyori=0.6; jikan=2}; 
+{kiten="Î¯ÃÓ»³²¦"; shuten="ÀÖºä¸«Éí"; keiyu="¶äºÂÀş"; kyori=0.9; jikan=2}; 
+{kiten="ÀÖºä¸«Éí"; shuten="ÀÄ»³°ìÃúÌÜ"; keiyu="¶äºÂÀş"; kyori=1.3; jikan=2}; 
+{kiten="ÀÄ»³°ìÃúÌÜ"; shuten="³°±ñÁ°"; keiyu="¶äºÂÀş"; kyori=0.7; jikan=2}; 
+{kiten="³°±ñÁ°"; shuten="É½»²Æ»"; keiyu="¶äºÂÀş"; kyori=0.7; jikan=1}; 
+{kiten="É½»²Æ»"; shuten="½ÂÃ«"; keiyu="¶äºÂÀş"; kyori=1.3; jikan=1}; 
+{kiten="½ÂÃ«"; shuten="É½»²Æ»"; keiyu="È¾Â¢ÌçÀş"; kyori=1.3; jikan=2}; 
+{kiten="É½»²Æ»"; shuten="ÀÄ»³°ìÃúÌÜ"; keiyu="È¾Â¢ÌçÀş"; kyori=1.4; jikan=2}; 
+{kiten="ÀÄ»³°ìÃúÌÜ"; shuten="±ÊÅÄÄ®"; keiyu="È¾Â¢ÌçÀş"; kyori=1.3; jikan=2}; 
+{kiten="±ÊÅÄÄ®"; shuten="È¾Â¢Ìç"; keiyu="È¾Â¢ÌçÀş"; kyori=1.0; jikan=2}; 
+{kiten="È¾Â¢Ìç"; shuten="¶åÃÊ²¼"; keiyu="È¾Â¢ÌçÀş"; kyori=1.6; jikan=2}; 
+{kiten="¶åÃÊ²¼"; shuten="¿ÀÊİÄ®"; keiyu="È¾Â¢ÌçÀş"; kyori=0.4; jikan=1}; 
+{kiten="¿ÀÊİÄ®"; shuten="Âç¼êÄ®"; keiyu="È¾Â¢ÌçÀş"; kyori=1.7; jikan=3}; 
+{kiten="Âç¼êÄ®"; shuten="»°±ÛÁ°"; keiyu="È¾Â¢ÌçÀş"; kyori=0.7; jikan=1}; 
+{kiten="»°±ÛÁ°"; shuten="¿åÅ·µÜÁ°"; keiyu="È¾Â¢ÌçÀş"; kyori=1.3; jikan=2}; 
+{kiten="¿åÅ·µÜÁ°"; shuten="À¶À¡Çò²Ï"; keiyu="È¾Â¢ÌçÀş"; kyori=1.7; jikan=3}; 
+{kiten="À¶À¡Çò²Ï"; shuten="½»µÈ"; keiyu="È¾Â¢ÌçÀş"; kyori=1.9; jikan=3}; 
+{kiten="½»µÈ"; shuten="¶Ó»åÄ®"; keiyu="È¾Â¢ÌçÀş"; kyori=1.; jikan=2}; 
+{kiten="¶Ó»åÄ®"; shuten="²¡¾å"; keiyu="È¾Â¢ÌçÀş"; kyori=1.4; jikan=2}; 
+{kiten="ÃæÌÜ¹õ"; shuten="·ÃÈæ¼÷"; keiyu="ÆüÈæÃ«Àş"; kyori=1.; jikan=2}; 
+{kiten="·ÃÈæ¼÷"; shuten="¹­Èø"; keiyu="ÆüÈæÃ«Àş"; kyori=1.5; jikan=3}; 
+{kiten="¹­Èø"; shuten="Ï»ËÜÌÚ"; keiyu="ÆüÈæÃ«Àş"; kyori=1.7; jikan=3}; 
+{kiten="Ï»ËÜÌÚ"; shuten="¿ÀÃ«Ä®"; keiyu="ÆüÈæÃ«Àş"; kyori=1.5; jikan=3}; 
+{kiten="¿ÀÃ«Ä®"; shuten="²â¥ö´Ø"; keiyu="ÆüÈæÃ«Àş"; kyori=1.3; jikan=2}; 
+{kiten="²â¥ö´Ø"; shuten="ÆüÈæÃ«"; keiyu="ÆüÈæÃ«Àş"; kyori=1.2; jikan=2}; 
+{kiten="ÆüÈæÃ«"; shuten="¶äºÂ"; keiyu="ÆüÈæÃ«Àş"; kyori=0.4; jikan=1}; 
+{kiten="¶äºÂ"; shuten="Åì¶äºÂ"; keiyu="ÆüÈæÃ«Àş"; kyori=0.4; jikan=1}; 
+{kiten="Åì¶äºÂ"; shuten="ÃÛÃÏ"; keiyu="ÆüÈæÃ«Àş"; kyori=0.6; jikan=2}; 
+{kiten="ÃÛÃÏ"; shuten="È¬ÃúËÙ"; keiyu="ÆüÈæÃ«Àş"; kyori=1.; jikan=2}; 
+{kiten="È¬ÃúËÙ"; shuten="³ı¾ìÄ®"; keiyu="ÆüÈæÃ«Àş"; kyori=0.5; jikan=1}; 
+{kiten="³ı¾ìÄ®"; shuten="¿Í·ÁÄ®"; keiyu="ÆüÈæÃ«Àş"; kyori=0.9; jikan=2}; 
+{kiten="¿Í·ÁÄ®"; shuten="¾®ÅÁÇÏÄ®"; keiyu="ÆüÈæÃ«Àş"; kyori=0.6; jikan=1}; 
+{kiten="¾®ÅÁÇÏÄ®"; shuten="½©ÍÕ¸¶"; keiyu="ÆüÈæÃ«Àş"; kyori=0.9; jikan=2}; 
+{kiten="½©ÍÕ¸¶"; shuten="Ãç¸æÅÌÄ®"; keiyu="ÆüÈæÃ«Àş"; kyori=1.; jikan=1}; 
+{kiten="Ãç¸æÅÌÄ®"; shuten="¾åÌî"; keiyu="ÆüÈæÃ«Àş"; kyori=0.5; jikan=1}; 
+{kiten="¾åÌî"; shuten="ÆşÃ«"; keiyu="ÆüÈæÃ«Àş"; kyori=1.2; jikan=2}; 
+{kiten="ÆşÃ«"; shuten="»°¥ÎÎØ"; keiyu="ÆüÈæÃ«Àş"; kyori=1.2; jikan=2}; 
+{kiten="»°¥ÎÎØ"; shuten="ÆîÀé½»"; keiyu="ÆüÈæÃ«Àş"; kyori=0.8; jikan=2}; 
+{kiten="ÆîÀé½»"; shuten="ËÌÀé½»"; keiyu="ÆüÈæÃ«Àş"; kyori=1.8; jikan=3}; 
+{kiten="ÃÓÂŞ"; shuten="¿·ÂçÄÍ"; keiyu="´İ¥ÎÆâÀş"; kyori=1.8; jikan=3}; 
+{kiten="¿·ÂçÄÍ"; shuten="è¬²ÙÃ«"; keiyu="´İ¥ÎÆâÀş"; kyori=1.2; jikan=2}; 
+{kiten="è¬²ÙÃ«"; shuten="¸å³Ú±à"; keiyu="´İ¥ÎÆâÀş"; kyori=1.8; jikan=2}; 
+{kiten="¸å³Ú±à"; shuten="ËÜ¶¿»°ÃúÌÜ"; keiyu="´İ¥ÎÆâÀş"; kyori=0.8; jikan=1}; 
+{kiten="ËÜ¶¿»°ÃúÌÜ"; shuten="¸æÃã¥Î¿å"; keiyu="´İ¥ÎÆâÀş"; kyori=0.8; jikan=1}; 
+{kiten="¸æÃã¥Î¿å"; shuten="Ã¸Ï©Ä®"; keiyu="´İ¥ÎÆâÀş"; kyori=0.8; jikan=1}; 
+{kiten="Ã¸Ï©Ä®"; shuten="Âç¼êÄ®"; keiyu="´İ¥ÎÆâÀş"; kyori=0.9; jikan=2}; 
+{kiten="Âç¼êÄ®"; shuten="Åìµş"; keiyu="´İ¥ÎÆâÀş"; kyori=0.6; jikan=1}; 
+{kiten="Åìµş"; shuten="¶äºÂ"; keiyu="´İ¥ÎÆâÀş"; kyori=1.1; jikan=2}; 
+{kiten="¶äºÂ"; shuten="²â¥ö´Ø"; keiyu="´İ¥ÎÆâÀş"; kyori=1.0; jikan=2}; 
+{kiten="²â¥ö´Ø"; shuten="¹ñ²ñµÄ»öÆ²Á°"; keiyu="´İ¥ÎÆâÀş"; kyori=0.7; jikan=1}; 
+{kiten="¹ñ²ñµÄ»öÆ²Á°"; shuten="ÀÖºä¸«Éí"; keiyu="´İ¥ÎÆâÀş"; kyori=0.9; jikan=2}; 
+{kiten="ÀÖºä¸«Éí"; shuten="»Í¥ÄÃ«"; keiyu="´İ¥ÎÆâÀş"; kyori=1.3; jikan=2}; 
+{kiten="»Í¥ÄÃ«"; shuten="»ÍÃ«»°ÃúÌÜ"; keiyu="´İ¥ÎÆâÀş"; kyori=1.0; jikan=2}; 
+{kiten="»ÍÃ«»°ÃúÌÜ"; shuten="¿·½É¸æ±ñÁ°"; keiyu="´İ¥ÎÆâÀş"; kyori=0.9; jikan=1}; 
+{kiten="¿·½É¸æ±ñÁ°"; shuten="¿·½É»°ÃúÌÜ"; keiyu="´İ¥ÎÆâÀş"; kyori=0.7; jikan=1}; 
+{kiten="¿·½É»°ÃúÌÜ"; shuten="¿·½É"; keiyu="´İ¥ÎÆâÀş"; kyori=0.3; jikan=1}; 
+{kiten="¿·½É"; shuten="À¾¿·½É"; keiyu="´İ¥ÎÆâÀş"; kyori=0.8; jikan=1}; 
+{kiten="À¾¿·½É"; shuten="ÃæÌîºä¾å"; keiyu="´İ¥ÎÆâÀş"; kyori=1.1; jikan=2}; 
+{kiten="ÃæÌîºä¾å"; shuten="¿·ÃæÌî"; keiyu="´İ¥ÎÆâÀş"; kyori=1.1; jikan=2}; 
+{kiten="¿·ÃæÌî"; shuten="Åì¹â±ß»û"; keiyu="´İ¥ÎÆâÀş"; kyori=1.0; jikan=1}; 
+{kiten="Åì¹â±ß»û"; shuten="¿·¹â±ß»û"; keiyu="´İ¥ÎÆâÀş"; kyori=0.9; jikan=1}; 
+{kiten="¿·¹â±ß»û"; shuten="Æî°¤º´¥öÃ«"; keiyu="´İ¥ÎÆâÀş"; kyori=1.2; jikan=2}; 
+{kiten="Æî°¤º´¥öÃ«"; shuten="²®·¦"; keiyu="´İ¥ÎÆâÀş"; kyori=1.5; jikan=2}; 
+{kiten="ÃæÌîºä¾å"; shuten="ÃæÌî¿·¶¶"; keiyu="´İ¥ÎÆâÀş"; kyori=1.3; jikan=2}; 
+{kiten="ÃæÌî¿·¶¶"; shuten="ÃæÌîÉÙ»Î¸«Ä®"; keiyu="´İ¥ÎÆâÀş"; kyori=0.6; jikan=1}; 
+{kiten="ÃæÌîÉÙ»Î¸«Ä®"; shuten="ÊıÆîÄ®"; keiyu="´İ¥ÎÆâÀş"; kyori=1.3; jikan=2}; 
+{kiten="»Ô¥öÃ«"; shuten="»Í¥ÄÃ«"; keiyu="ÆîËÌÀş"; kyori=1.0; jikan=2}; 
+{kiten="»Í¥ÄÃ«"; shuten="±ÊÅÄÄ®"; keiyu="ÆîËÌÀş"; kyori=1.3; jikan=3}; 
+{kiten="±ÊÅÄÄ®"; shuten="Î¯ÃÓ»³²¦"; keiyu="ÆîËÌÀş"; kyori=0.9; jikan=1}; 
+{kiten="Î¯ÃÓ»³²¦"; shuten="Ï»ËÜÌÚ°ìÃúÌÜ"; keiyu="ÆîËÌÀş"; kyori=0.9; jikan=2}; 
+{kiten="Ï»ËÜÌÚ°ìÃúÌÜ"; shuten="ËãÉÛ½½ÈÖ"; keiyu="ÆîËÌÀş"; kyori=1.2; jikan=2}; 
+{kiten="ËãÉÛ½½ÈÖ"; shuten="Çò¶â¹âÎØ"; keiyu="ÆîËÌÀş"; kyori=1.3; jikan=2}; 
+{kiten="Çò¶â¹âÎØ"; shuten="Çò¶âÂæ"; keiyu="ÆîËÌÀş"; kyori=1.0; jikan=2}; 
+{kiten="Çò¶âÂæ"; shuten="ÌÜ¹õ"; keiyu="ÆîËÌÀş"; kyori=1.3; jikan=2}; 
+{kiten="»Ô¥öÃ«"; shuten="ÈÓÅÄ¶¶"; keiyu="ÆîËÌÀş"; kyori=1.1 ; jikan=2}; 
+{kiten="ÈÓÅÄ¶¶"; shuten="¸å³Ú±à"; keiyu="ÆîËÌÀş"; kyori=1.4 ; jikan=2}; 
+{kiten="¸å³Ú±à"; shuten="ÅìÂçÁ°"; keiyu="ÆîËÌÀş"; kyori=1.3 ; jikan=3}; 
+{kiten="ÅìÂçÁ°"; shuten="ËÜ¶ğ¹ş"; keiyu="ÆîËÌÀş"; kyori=0.9 ; jikan=2}; 
+{kiten="ËÜ¶ğ¹ş"; shuten="¶ğ¹ş"; keiyu="ÆîËÌÀş"; kyori=1.4; jikan=2}; 
+{kiten="¶ğ¹ş"; shuten="À¾¥ö¸¶"; keiyu="ÆîËÌÀş"; kyori=1.4; jikan=2}; 
+{kiten="À¾¥ö¸¶"; shuten="²¦»Ò"; keiyu="ÆîËÌÀş"; kyori=1.0; jikan=2}; 
+{kiten="²¦»Ò"; shuten="²¦»Ò¿ÀÃ«"; keiyu="ÆîËÌÀş"; kyori=1.2; jikan=2}; 
+{kiten="²¦»Ò¿ÀÃ«"; shuten="»ÖÌĞ"; keiyu="ÆîËÌÀş"; kyori=1.6; jikan=3}; 
+{kiten="»ÖÌĞ"; shuten="ÀÖ±©´äÊ¥"; keiyu="ÆîËÌÀş"; kyori=1.1; jikan=2}; 
+{kiten="À¾Á¥¶¶" ; shuten="¸¶ÌÚÃæ»³"; keiyu="ÅìÀ¾Àş"; kyori=1.9; jikan=3}; 
+{kiten="¸¶ÌÚÃæ»³"; shuten="Ì¯Åµ"; keiyu="ÅìÀ¾Àş"; kyori=2.1 ; jikan=2}; 
+{kiten="Ì¯Åµ"; shuten="¹ÔÆÁ"; keiyu="ÅìÀ¾Àş"; kyori=1.3 ; jikan=2}; 
+{kiten="¹ÔÆÁ"; shuten="Æî¹ÔÆÁ"; keiyu="ÅìÀ¾Àş"; kyori=1.5 ; jikan=2}; 
+{kiten="Æî¹ÔÆÁ"; shuten="±º°Â" ; keiyu="ÅìÀ¾Àş"; kyori=1.2 ; jikan=2}; 
+{kiten="±º°Â" ; shuten="³ëÀ¾"; keiyu="ÅìÀ¾Àş"; kyori=1.9 ; jikan=2}; 
+{kiten="³ëÀ¾"; shuten="À¾³ëÀ¾"; keiyu="ÅìÀ¾Àş"; kyori=1.2 ; jikan=2}; 
+{kiten="À¾³ëÀ¾"; shuten="Æîº½Ä®"; keiyu="ÅìÀ¾Àş"; kyori=2.7 ; jikan=2}; 
+{kiten="Æîº½Ä®"; shuten="ÅìÍÛÄ®"; keiyu="ÅìÀ¾Àş"; kyori=1.2 ; jikan=2}; 
+{kiten="ÅìÍÛÄ®"; shuten="ÌÚ¾ì" ; keiyu="ÅìÀ¾Àş"; kyori=0.9 ; jikan=1}; 
+{kiten="ÌÚ¾ì"; shuten="ÌçÁ°ÃçÄ®"; keiyu="ÅìÀ¾Àş"; kyori=1.1 ; jikan=1}; 
+{kiten="ÌçÁ°ÃçÄ®"; shuten="³ı¾ìÄ®"; keiyu="ÅìÀ¾Àş"; kyori=1.8 ; jikan=2}; 
+{kiten="³ı¾ìÄ®"; shuten="ÆüËÜ¶¶"; keiyu="ÅìÀ¾Àş"; kyori=0.5 ; jikan=1}; 
+{kiten="ÆüËÜ¶¶"; shuten="Âç¼êÄ®"; keiyu="ÅìÀ¾Àş"; kyori=0.8 ; jikan=1}; 
+{kiten="Âç¼êÄ®"; shuten="Ãİ¶¶"; keiyu="ÅìÀ¾Àş"; kyori=1.0; jikan=2}; 
+{kiten="Ãİ¶¶"; shuten="¶åÃÊ²¼"; keiyu="ÅìÀ¾Àş"; kyori=1.0; jikan=1}; 
+{kiten="¶åÃÊ²¼"; shuten="ÈÓÅÄ¶¶"; keiyu="ÅìÀ¾Àş"; kyori=0.7; jikan=1}; 
+{kiten="ÈÓÅÄ¶¶"; shuten="¿À³Úºä"; keiyu="ÅìÀ¾Àş"; kyori=1.2; jikan=2}; 
+{kiten="¿À³Úºä"; shuten="Áá°ğÅÄ"; keiyu="ÅìÀ¾Àş"; kyori=1.2; jikan=2}; 
+{kiten="Áá°ğÅÄ"; shuten="¹âÅÄÇÏ¾ì"; keiyu="ÅìÀ¾Àş"; kyori=1.7; jikan=3}; 
+{kiten="¹âÅÄÇÏ¾ì"; shuten="Íî¹ç"; keiyu="ÅìÀ¾Àş"; kyori=1.9; jikan=3}; 
+{kiten="Íî¹ç"; shuten="ÃæÌî"; keiyu="ÅìÀ¾Àş"; kyori=2.0; jikan=3}; 
+{kiten="¿·ÌÚ¾ì"; shuten="Ã¤Ì¦"; keiyu="Í­³ÚÄ®Àş"; kyori=1.5; jikan=2}; 
+{kiten="Ã¤Ì¦"; shuten="Ë­½§"; keiyu="Í­³ÚÄ®Àş"; kyori=1.7; jikan=2}; 
+{kiten="Ë­½§"; shuten="·îÅç"; keiyu="Í­³ÚÄ®Àş"; kyori=1.4; jikan=2}; 
+{kiten="·îÅç"; shuten="¿·ÉÙÄ®"; keiyu="Í­³ÚÄ®Àş"; kyori=1.3; jikan=2}; 
+{kiten="¿·ÉÙÄ®"; shuten="¶äºÂ°ìÃúÌÜ"; keiyu="Í­³ÚÄ®Àş"; kyori=0.7; jikan=1}; 
+{kiten="¶äºÂ°ìÃúÌÜ"; shuten="Í­³ÚÄ®"; keiyu="Í­³ÚÄ®Àş"; kyori=0.5; jikan=1}; 
+{kiten="Í­³ÚÄ®"; shuten="ºùÅÄÌç"; keiyu="Í­³ÚÄ®Àş"; kyori=1.0; jikan=1}; 
+{kiten="ºùÅÄÌç"; shuten="±ÊÅÄÄ®"; keiyu="Í­³ÚÄ®Àş"; kyori=0.9; jikan=2}; 
+{kiten="±ÊÅÄÄ®"; shuten="¹íÄ®"; keiyu="Í­³ÚÄ®Àş"; kyori=0.9; jikan=1}; 
+{kiten="¹íÄ®"; shuten="»Ô¥öÃ«"; keiyu="Í­³ÚÄ®Àş"; kyori=0.9; jikan=1}; 
+{kiten="»Ô¥öÃ«"; shuten="ÈÓÅÄ¶¶"; keiyu="Í­³ÚÄ®Àş"; kyori=1.1; jikan=2}; 
+{kiten="ÈÓÅÄ¶¶"; shuten="¹¾¸ÍÀî¶¶"; keiyu="Í­³ÚÄ®Àş"; kyori=1.6; jikan=3}; 
+{kiten="¹¾¸ÍÀî¶¶"; shuten="¸î¹ñ»û"; keiyu="Í­³ÚÄ®Àş"; kyori=1.3; jikan=2}; 
+{kiten="¸î¹ñ»û"; shuten="ÅìÃÓÂŞ"; keiyu="Í­³ÚÄ®Àş"; kyori=1.1; jikan=2}; 
+{kiten="ÅìÃÓÂŞ"; shuten="ÃÓÂŞ"; keiyu="Í­³ÚÄ®Àş"; kyori=2.0; jikan=2}; 
+{kiten="ÃÓÂŞ"; shuten="Í×Ä®"; keiyu="Í­³ÚÄ®Àş"; kyori=1.2; jikan=2}; 
+{kiten="Í×Ä®"; shuten="ÀéÀî"; keiyu="Í­³ÚÄ®Àş"; kyori=1.0; jikan=1}; 
+{kiten="ÀéÀî"; shuten="¾®Ãİ¸ş¸¶"; keiyu="Í­³ÚÄ®Àş"; kyori=1.0; jikan=2}; 
+{kiten="¾®Ãİ¸ş¸¶"; shuten="É¹ÀîÂæ"; keiyu="Í­³ÚÄ®Àş"; kyori=1.5; jikan=2}; 
+{kiten="É¹ÀîÂæ"; shuten="Ê¿ÏÂÂæ"; keiyu="Í­³ÚÄ®Àş"; kyori=1.4; jikan=2}; 
+{kiten="Ê¿ÏÂÂæ"; shuten="±ÄÃÄÀÖÄÍ"; keiyu="Í­³ÚÄ®Àş"; kyori=1.8; jikan=2}; 
+{kiten="±ÄÃÄÀÖÄÍ"; shuten="±ÄÃÄÀ®Áı"; keiyu="Í­³ÚÄ®Àş"; kyori=1.5; jikan=2}; 
+{kiten="±ÄÃÄÀ®Áı"; shuten="ÏÂ¸÷»Ô"; keiyu="Í­³ÚÄ®Àş"; kyori=2.1; jikan=3}; 
+] 

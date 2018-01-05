@@ -10,3 +10,11 @@ type ekimei_t =
 let hyoji eki = match eki with
     { kanji = n; kana = k; romaji = e; shozoku = l } -> l ^ " " ^ n ^ " (" ^ k ^ ")"
 
+(* 駅間 *)
+type ekikan_t =
+{ kiten : string;    (* 起点 *)
+  shuten : string;   (* 終点 *)
+  keiyu : string;    (* 路線名 *)
+  kyori : float;     (* 距離(km) *)
+  jikan : int;       (* 所要時間(min) *)
+}

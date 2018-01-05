@@ -6,5 +6,7 @@ type ekimei_t =
   romaji : string;
   shozoku : string;
 }
+(* 駅名の表示 *)
 let hyoji eki = match eki with
     { kanji = n; kana = k; romaji = e; shozoku = l } -> l ^ " " ^ n ^ " (" ^ k ^ ")"
+
